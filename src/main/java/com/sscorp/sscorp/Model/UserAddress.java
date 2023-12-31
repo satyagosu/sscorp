@@ -11,4 +11,12 @@ public class UserAddress {
     public String state;
     public String country;
 
+    public UserAddress() {
+        this.houseNo = houseNo;
+        this.city = city;
+        this.pincode = pincode;
+        this.state = state;
+        this.country = country;
+    }
+
 }

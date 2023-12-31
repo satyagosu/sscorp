@@ -1,41 +1,38 @@
 package com.sscorp.sscorp.controller;
 
-import com.sscorp.sscorp.Model.RegisterUser;
+import com.sscorp.sscorp.Model.User;
 import com.sscorp.sscorp.Model.UserInfo;
-import com.sscorp.sscorp.repository.RegisterUserRepository;
 import com.sscorp.sscorp.service.UserSerivce;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
-import lombok.extern.java.Log;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestBody;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 
 @Slf4j
 @RestController
-public class Controller {
+public class Controller<user> {
 
-    private RegisterUserRepository registerUserRepository;
     @Autowired
     UserSerivce userSerivce;
 
-    @Autowired
-    public Controller(RegisterUserRepository registerUserRepository) {
-        this.registerUserRepository = registerUserRepository;
-    }
-
     @GetMapping("/getuser/{phone}")
     @ResponseBody
-    public UserInfo getUserInfo(@PathVariable String phone){
-       return userSerivce.userInfo(phone);
+    public ResponseEntity<UserInfo> getUserInfo(@PathVariable String phone){
+            
+            UserInfo userInfo = new UserInfo();
+            userInfo = userSerivce.userInfo(phone);
+            if(userInfo != null && userInfo.getFirstName() != null) {
+               return ResponseEntity.ok(userInfo);
+            }else {
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+            }
     }
 
-    @PostMapping("/registeruser/{phone}")
-    @RequestBody
-    @ResponseBody
-    public String registerUser(@PathVariable String phone , @RequestBody RegisterUser registerUser){
-        return userSerivce.registerUser(phone , registerUser, registerUserRepository);
+    @PostMapping (value = "/registeruser", consumes = "application/json")
+    public String registerUser(@RequestBody User user){
+        return userSerivce.registerUser(user);
     }
 }

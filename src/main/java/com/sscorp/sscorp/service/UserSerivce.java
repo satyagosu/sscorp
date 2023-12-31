@@ -2,7 +2,7 @@ package com.sscorp.sscorp.service;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.sscorp.sscorp.Model.RegisterUser;
+import com.sscorp.sscorp.Model.User;
 import com.sscorp.sscorp.Model.UserAddress;
 import com.sscorp.sscorp.Model.UserInfo;
 import com.sscorp.sscorp.dao.MongoDBConnection;
@@ -13,56 +13,59 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Slf4j
 @Configuration
 @Service
 public class UserSerivce {
 
     @Autowired
-   private MongoDBConnection mongoDBConnection;
-    UserInfo userInfo = new UserInfo();
+    private MongoDBConnection mongoDBConnection;
+
     UserAddress userAddress = new UserAddress();
+    @Autowired
     private RegisterUserRepository registerUserRepository;
 
-    public UserInfo userInfo(String phone){
+    public UserInfo userInfo(String phone) {
+        UserInfo userInfo = new UserInfo();
+        try {
+            List<User> existUser = registerUserRepository.findByPhone(phone);
+            log.debug("existUser: " + existUser.toString());
 
-        if(mongoDBConnection==null){
-            log.warn("Mongo db connection is null");
-             mongoDBConnection.getMongoDBConnection();
-        }
-        MongoDatabase mongoDatabase =mongoDBConnection.getMongoDBConnection().getDatabase("sscorp");
-
-        MongoCollection<Document> userCollection = mongoDatabase.getCollection("userInfo");
-        Document user = userCollection.find(new Document("phone", phone)).first();
-        log.debug("user info:" +user.toJson());
-        userInfo.setFirstName(user.getString("firstName"));
-        userInfo.setLastName(user.getString("lastName"));
-        userInfo.setPhone(user.getString("phone"));
-        userInfo.setEmail(user.getString("email"));
-        userInfo.setIdentity(user.getString("identity"));
-        Document address = (Document) user.get("address");
-        userAddress.setHouseNo(address.getString("houseNo"));
-        userAddress.setCity(address.getString("city"));
-        userAddress.setPincode(address.getString("pincode"));
-        userAddress.setState(address.getString("state"));
-        userAddress.setCountry(address.getString("country"));
-        userInfo.setUserAddress(userAddress);
-        return userInfo;
+            if(!existUser.isEmpty()) {
+                userInfo.setFirstName(existUser.get(0).getFirstName());
+                userInfo.setLastName(existUser.get(0).getLastName());
+                userInfo.setPhone(existUser.get(0).getPhone());
+                userInfo.setEmail(existUser.get(0).getEmail());
+                userInfo.setIdentity(existUser.get(0).getIdentity());
+                UserAddress address = existUser.get(0).getUserAddress();
+                userInfo.setUserAddress(address);
+            }else {
+                log.warn("user not found with the phone#");
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }return userInfo;
     }
 
-    public String registerUser(String phone, RegisterUser registerUser, RegisterUserRepository registerUserRepository) {
-
-        if(mongoDBConnection==null){
-            log.warn("Mongo db connection is null");
-            mongoDBConnection.getMongoDBConnection();
-        }
+    public String registerUser(User user) {
+        String response = "";
         try {
-            registerUserRepository.save(registerUser);
-            log.info("registered user successfully!!!");
+            if(user !=null && user.getPhone() != null){
+               List<User> existUser =registerUserRepository.findByPhone(user.getPhone());
+               if(existUser.isEmpty()) {
+                   registerUserRepository.save(user);
+                   log.info("registered user successfully!!!");
+                   response = "registration of user: "+user.getFirstName()+ " with phone: " + user.getPhone() + " is successful!!!";
+               } else{
+                   log.warn("user" + user.getFirstName() + " already exists: " + user.toString());
+                   response = "user already exists with this phone#. try with different phone number";
+                   }
+            }
         } catch (Exception e){
             log.error(e.getMessage());
         }
-
-        return "registered user successfully!!!";
+        return response;
     }
 }

@@ -51,7 +51,7 @@ public class MongoDBConnection {
 */
     @Bean
     public MongoClient getMongoDBConnection() {
-        String connectionString = "mongodb+srv://gs19170:k3Op904933HUWlfr@sscorp.tmwg3p1.mongodb.net/?retryWrites=true&w=majority";
+        String connectionString = "mongodb+srv://gs19170:k3Op904933HUWlfr@sscorp.tmwg3p1.mongodb.net/sscorp1?retryWrites=true&w=majority";
         ServerApi serverApi = ServerApi.builder()
                 .version(ServerApiVersion.V1)
                 .build();
